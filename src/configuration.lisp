@@ -1,7 +1,8 @@
 (defpackage :ppp.configuration
   (:use #:cl
         #:alexandria)
-  (:export #:migrations-directory))
+  (:export #:migrations-directory
+           #:database-url))
 
 (in-package :ppp.configuration)
 
@@ -18,3 +19,7 @@
 (defun migrations-directory ()
   (ensure-configuration)
   (merge-pathnames (gethash "migration-directory" *configuration* "migrations/")))
+
+(defun database-url ()
+  (ensure-configuration)
+  (gethash "database-url" *configuration* (uiop:getenv "DATABASE_URL")))

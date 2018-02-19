@@ -1,1 +1,2 @@
 migration-directory = "pigeon/revisions/"
+database-url = "postgres://postgres@localhost/postgres"

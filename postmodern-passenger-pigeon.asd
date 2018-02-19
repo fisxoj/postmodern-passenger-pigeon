@@ -4,10 +4,15 @@
   :version "0.0.1"
   :depends-on ("alexandria"
                "postmodern"
-               "pp-toml")
+               "pp-toml"
+               "quri")
   :pathname #P"src/"
   :components ((:file "configuration")
                (:file "operations")
                (:file "migration")
                (:file "solver")
-               (:file "pigeon")))
+               (:file "pigeon"))
+
+  :build-operation "program-op"
+  :entry-point "ppp:main"
+  :build-pathname "ppp")
