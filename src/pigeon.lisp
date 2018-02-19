@@ -22,7 +22,8 @@
 
 (defun execute (plan)
   (dolist (step (plan-steps plan))
-    (format t "~&Migrating from ~a to ~a (~a)~%"
+    (format t "~&Migrating ~a from ~a to ~a (~a)~%"
+            (second step)
             (if (eq :null (current-migration)) :base (current-migration))
             (migration-revision (car step))
             (migration-name (car step)))

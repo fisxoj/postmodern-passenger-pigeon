@@ -6,4 +6,4 @@
               (name :type (string 20))))))
 
 (defun down ()
-  (query (:drop-table people)))
+  (query (:drop-table 'people)))

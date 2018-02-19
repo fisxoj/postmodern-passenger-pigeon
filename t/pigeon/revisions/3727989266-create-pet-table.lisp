@@ -8,4 +8,4 @@
            (:foreign-key (human-id) (people id)))))
 
 (defun down ()
-  (query (:drop-table pets)))
+  (query (:drop-table 'pets)))

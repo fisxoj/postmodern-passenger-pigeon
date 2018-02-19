@@ -4,6 +4,7 @@
   (:export #:current-migration
            #:with-migrations
            #:migrate
+           #:new-migration
 
            #:list-migrations
            #:describe-migrations
@@ -53,7 +54,7 @@ for it in LOAD-MIGRATION.  This likely causes [PACKAGE-NAME]:up and
   (declare (type migration migration))
 
   (let ((*package* (find-package (migration-package migration))))
-    (load (migration-pathname migration) :verbose t :print t)))
+    (load (migration-pathname migration))))
 
 (defun load-migration (migration-pathname)
   (let* ((first-dash-position (position #\- (pathname-name migration-pathname) :test #'char=))
@@ -135,3 +136,22 @@ context where they have been loaded)."
 (defun current-migration ()
   (ensure-revision-table)
   (postmodern:query (:select (:max 'revision) :from 'pigeon-revision) :single))
+
+(defun new-migration (name)
+
+  (let* ((revision (get-universal-time))
+         (slugified-name (format nil
+                                 "~d-~a.lisp"
+                                 revision
+                                 (string-downcase
+                                  (coerce (loop for c across name
+                                                if (char= c #\Space)
+                                                  collect #\-
+                                                else
+                                                  collect c)
+                                          'string))))
+         (migration-pathname (merge-pathnames slugified-name (ppp.configuration:migrations-directory))))
+
+    (with-open-file (s migration-pathname :direction :output)
+      (format s "~S~%~%(defun up ())~%~%(defun down())~%" name))
+    migration-pathname))
