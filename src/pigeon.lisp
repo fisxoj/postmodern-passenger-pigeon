@@ -49,26 +49,30 @@
           ,@body)
      (postmodern:disconnect-toplevel)))
 
-(defun print-usage ()
+(defun print-usage (&optional message)
   (format t "~&ppp [command]
+
+~@[** ~a **~%~]
 
 Commands:
     describe                     Describe the available migrations
     migrate [direction] [target] Migrates the database in DIRECTION (up or down) to TARGET (head, base, or a number delta)
     new \"[name]\"               Create a new migration named NAME in the migrations directory
-    help                         Display this text."))
+    help                         Display this text."
+          message))
 
 (defun main ()
   (let ((args (uiop:raw-command-line-arguments)))
     (switch ((second args) :test #'string-equal)
       ("describe" (ppp.migration:describe-migrations))
       ("migrate"   (with-database ()
-                     (migrate (print (alexandria:make-keyword (string-upcase (third args))))
-                              (print (let ((target (fourth args)))
-                                       (switch (target :test #'string-equal)
-                                         ("head" :head)
-                                         ("base" :base)
-                                         (t (parse-integer target))))))))
+                     (migrate (alexandria:make-keyword (string-upcase (third args)))
+                              (let ((target (fourth args)))
+                                (switch (target :test #'string-equal)
+                                  ("head" :head)
+                                  ("base" :base)
+                                  (t (parse-integer target)))))))
       ("new"      (format t "~&Created ~a.~%" (ppp.migration:new-migration (third args))))
       ("help"     (print-usage))
-      ("--help"   (print-usage)))))
+      ("--help"   (print-usage))
+      (t          (print-usage (format nil "no such command ~S" (second args)))))))
