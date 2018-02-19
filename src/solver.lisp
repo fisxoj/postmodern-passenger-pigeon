@@ -20,12 +20,13 @@
   "Find a PLAN that lists steps to get from START to TARGET by calling
 UP or DOWN on migrations."
 
-  (let* (;; The revision that we are currently at, or 0 if there are no revisions in the database
+  (let* ( ;; The revision that we are currently at, or 0 if there are no revisions in the database
          (start-revision (if (eq start :null)
                              0
                              start))
          ;; The revision we want to go up to (inclusive)
          (end-revision (cond
+                         ((eq target :base) 0)
                          ((null target)     0)
                          ((eq target :head) most-positive-fixnum)
                          (t                 target)))
@@ -52,21 +53,34 @@ UP or DOWN on migrations."
   (declare (type (member :up :down) direction)
            (type (or (integer 0) (member :base :head)) target))
 
-  (assert (not (or
-                (and (eq direction :down) (eq target :head))
-                (and (eq direction :up)   (eq target :base)))))
+  (assert (not (and (eq direction :down) (eq target :head))))
+  (assert (not (and (eq direction :up)   (eq target :base))))
 
-  (migration-revision
-   (ecase direction
-     (:up
-      (let ((sorted-migrations (sort ppp.migration::*migrations* #'< :key #'migration-revision)))
-        (etypecase target
-          (integer (nth (+ target (position (current-migration) sorted-migrations :key #'migration-revision)) sorted-migrations))
-          (symbol (ecase target
-                    (:head (first (reverse sorted-migrations))))))))
-     (:down
-      (let ((sorted-migrations (sort ppp.migration::*migrations* #'> :key #'migration-revision)))
-        (etypecase target
-          (integer (nth (+ target (position (current-migration) sorted-migrations :key #'migration-revision)) sorted-migrations))
-          (symbol (ecase target
-                    (:base (first (reverse sorted-migrations)))))))))))
+  (ecase direction
+    (:up
+     (let ((sorted-migrations (sort (copy-seq ppp.migration::*migrations*) #'< :key #'migration-revision)))
+       (etypecase target
+         (integer (migration-revision
+                   (if (eq (current-migration) :null)
+                       (first sorted-migrations)
+                       (nth (+ target (or (position (current-migration)
+                                                    sorted-migrations
+                                                    :key #'migration-revision
+                                                    :test #'=)
+                                          -1))
+                            sorted-migrations))))
+         (symbol (ecase target
+                   (:head most-positive-fixnum))))))
+    (:down
+     (if (eq (current-migration) :null)
+         (error "At base revision.  Can't go any lower.")
+         (let ((sorted-migrations (sort (copy-seq ppp.migration::*migrations*) #'> :key #'migration-revision)))
+           (etypecase target
+             (integer (migration-revision
+                       (nth (+ target (position (current-migration)
+                                                sorted-migrations
+                                                :key #'migration-revision
+                                                :test #'=))
+                            sorted-migrations)))
+             (symbol (ecase target
+                       (:base 0)))))))))

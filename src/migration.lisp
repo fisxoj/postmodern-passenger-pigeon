@@ -80,33 +80,55 @@ context where they have been loaded)."
 
   (find revision *migrations* :key #'migration-revision :test #'=))
 
-(defun migration-range (start end)
-  "Return a list of migratons lower < revision <= upper."
+(defun migration-range (start end &optional (migrations *migrations*))
+  "Return a list of migratons which changes its inclusivity depending
+on direction.  Downgrades are inclusive on the starting end (the
+largest revision number) and upgrades are inclusive on the end (also
+the largest revision).
+
+This means that if you have a list of revisions 1-5 and are at 4,
+
+UP 1 => apply revision #5
+
+DOWN 1 => revert revision #4"
 
   (declare (type integer start end))
 
-  (remove-if-not (lambda (r) (and (> r (min start end))
-                                  (<= r (max start end))))
-                 *migrations*
-                 :key #'migration-revision))
+  (remove-if-not
+   (if (< start end)
+       ;; For up revisions, exclude the lower number as it's already
+       ;; applied
+       (lambda (r) (and (> r start)
+                        (<= r end)))
+       ;; For down revisions, exclude include the starting revision
+       ;; since it must be reverted
+       (lambda (r) (and (<= r start)
+                        (< end r))))
+   migrations
+   :key #'migration-revision))
 
-(defun migrate (migration action)
+(defun migrate (migration action &key dry-run)
   "Perform ACTION from MIGRATION on the database."
 
   (declare (type action action)
            (type migration migration))
 
   (postmodern:with-transaction ()
-    (uiop:symbol-call (migration-package migration) action)
+    (unless dry-run
+      (uiop:symbol-call (migration-package migration) action))
     (cond
       ((eq action :down)
-       (postmodern:query (:delete-from 'pigeon-revision :where (:= 'revision '$1))
-                         (migration-revision migration)
-                         :none))
+       (if dry-run
+           (format t "~&DRY-RUN: DELETING REVISION ~a" (migration-revision migration))
+           (postmodern:query (:delete-from 'pigeon-revision :where (:= 'revision '$1))
+                             (migration-revision migration)
+                             :none)))
       ((eq action :up)
-       (postmodern:query (:insert-into 'pigeon-revision :set 'revision '$1)
-                         (migration-revision migration)
-                         :none)))))
+       (if dry-run
+           (format t "~&DRY-RUN: DELETING REVISION ~a" (migration-revision migration))
+           (postmodern:query (:insert-into 'pigeon-revision :set 'revision '$1)
+                             (migration-revision migration)
+                             :none))))))
 
 (defun list-migrations ()
   (uiop:directory-files (ppp.configuration:migrations-directory)
@@ -130,6 +152,7 @@ context where they have been loaded)."
 
 (defun ensure-revision-table ()
   "Ensures that the revision table exists."
+
   (unless (postmodern:table-exists-p 'pigeon-revision)
     (postmodern:execute "CREATE TABLE pigeon_revision (revision BIGINT)")))
 
