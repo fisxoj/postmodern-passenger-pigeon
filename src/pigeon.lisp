@@ -57,7 +57,7 @@
 Commands:
     describe                     Describe the available migrations
     migrate [direction] [target] Migrates the database in DIRECTION (up or down) to TARGET (head, base, or a number delta)
-    new \"[name]\"               Create a new migration named NAME in the migrations directory
+    new \"[name]\"                 Create a new migration named NAME in the migrations directory
     help                         Display this text."
           message))
 
