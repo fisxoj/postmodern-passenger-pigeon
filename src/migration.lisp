@@ -125,7 +125,7 @@ DOWN 1 => revert revision #4"
                              :none)))
       ((eq action :up)
        (if dry-run
-           (format t "~&DRY-RUN: DELETING REVISION ~a" (migration-revision migration))
+           (format t "~&DRY-RUN: INSERTING REVISION ~a" (migration-revision migration))
            (postmodern:query (:insert-into 'pigeon-revision :set 'revision '$1)
                              (migration-revision migration)
                              :none))))))
