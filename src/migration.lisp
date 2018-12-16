@@ -176,5 +176,5 @@ DOWN 1 => revert revision #4"
          (migration-pathname (merge-pathnames slugified-name (ppp.configuration:migrations-directory))))
 
     (with-open-file (s migration-pathname :direction :output)
-      (format s "~S~%~%(defun up ())~%~%(defun down())~%" name))
+      (format s "~S~%~%(defun up ())~%~%(defun down ())~%" name))
     migration-pathname))
