@@ -1,7 +1,7 @@
 (asdf:defsystem postmodern-passenger-pigeon
   :description "A migrations system for postmodern."
   :author "Matt Novenstern <fisxoj@gmail.com>"
-  :version "0.0.2"
+  :version "0.0.3"
   :depends-on ("alexandria"
                "postmodern"
                "pp-toml"
