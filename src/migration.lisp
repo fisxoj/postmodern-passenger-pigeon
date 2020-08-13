@@ -175,6 +175,8 @@ DOWN 1 => revert revision #4"
                                           'string))))
          (migration-pathname (merge-pathnames slugified-name (ppp.configuration:migrations-directory))))
 
+    (uiop:ensure-all-directories-exist (list) (ppp.configuration:migrations-directory))
+
     (with-open-file (s migration-pathname :direction :output)
       (format s "~S~%~%(defun up ())~%~%(defun down ())~%" name))
     migration-pathname))
