@@ -2,6 +2,7 @@
   (:use #:cl
         #:alexandria)
   (:export #:current-migration
+           #:ensure-revision-table
            #:with-migrations
            #:migrate
            #:new-migration
