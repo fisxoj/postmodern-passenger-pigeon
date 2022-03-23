@@ -15,6 +15,13 @@
 
 (in-package :ppp)
 
+(defmacro with-database (() &body body)
+  `(unwind-protect
+        (progn
+          (connect-from-url)
+          ,@body)
+     (postmodern:disconnect-toplevel)))
+
 (defun migrate (&optional (direction :up) (target :head) dry-run)
   (with-database ()
     (with-migrations ()
@@ -43,13 +50,6 @@
                                    (if colon-position (subseq auth (1+ colon-position)) "")
                                    hostname
                                    :port (or port 5432)))))
-
-(defmacro with-database (() &body body)
-  `(unwind-protect
-        (progn
-          (connect-from-url)
-          ,@body)
-     (postmodern:disconnect-toplevel)))
 
 (defun print-usage (&optional message)
   (format t "~&ppp [command]
