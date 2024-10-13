@@ -76,7 +76,7 @@ for it in LOAD-MIGRATION.  This likely causes [PACKAGE-NAME]:up and
   (uiop/package:delete-package* (migration-package migration) :nuke t))
 
 (defun find-migration (revision)
-  "Locate a migratoin in *MIGRATIONS* (all known migrations in a
+  "Locate a migration in *MIGRATIONS* (all known migrations in a
 context where they have been loaded)."
 
   (find revision *migrations* :key #'migration-revision :test #'=))
